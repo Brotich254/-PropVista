@@ -44,3 +44,4 @@ npm run prisma:push
 
 PropVista is a marketplace-style real estate app that demonstrates full-stack product development: searchable listings, role-based workflows, database modeling, API validation, and polished dashboard UI.
 # -PropVista
+# -PropVista

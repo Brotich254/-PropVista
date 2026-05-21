@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+  BUYER
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  SOLD
+  RENTED
+}
+
+enum ListingPurpose {
+  SALE
+  RENT
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  VILLA
+  TOWNHOUSE
+  LAND
+  COMMERCIAL
+}
+
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  email     String     @unique
+  role      Role       @default(BUYER)
+  agent     Agent?
+  favorites Favorite[]
+  inquiries Inquiry[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Agent {
+  id         String     @id @default(cuid())
+  userId     String     @unique
+  phone      String
+  agency     String
+  licenseNo  String?
+  bio        String?
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties Property[]
+}
+
+model Property {
+  id          String         @id @default(cuid())
+  agentId     String
+  title       String
+  slug        String         @unique
+  description String
+  address     String
+  city        String
+  country     String
+  latitude    Float?
+  longitude   Float?
+  priceCents  Int
+  bedrooms    Int
+  bathrooms   Int
+  areaSqm     Int
+  purpose     ListingPurpose
+  type        PropertyType
+  status      ListingStatus  @default(PENDING)
+  amenities   String[]
+  agent       Agent          @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  images      PropertyImage[]
+  favorites   Favorite[]
+  inquiries   Inquiry[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([city])
+  @@index([purpose, status])
+  @@index([priceCents])
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  url        String
+  alt        String
+  sortOrder  Int      @default(0)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model Inquiry {
+  id            String   @id @default(cuid())
+  userId        String?
+  propertyId    String
+  name          String
+  email         String
+  phone         String
+  message       String
+  preferredDate DateTime?
+  user          User?    @relation(fields: [userId], references: [id])
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+}
